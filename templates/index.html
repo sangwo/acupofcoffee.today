@@ -1,70 +1,106 @@
-<!DOCTYPE>
+<!DOCTYPE html>
 <html>
 <head>
   <title>A Cup of Coffee Today</title>
+  <link type="text/css" rel="stylesheet" href="static/style.css">
 </head>
 <body>
 
-  <h1>A Cup of Coffee Today</h1>
+  <div id="cover-page">
+    <h1>A Cup of Coffee Today</h1>
+    <div id="cover-message">Find out nearby coffee spots!</div>
+    <div id="error-message"></div>
+  </div>
 
-  <div id="error-message"></div>
+  <div id="scroll-down">Next Suggestion</div>
 
   <script src="static/lib/jquery-3.2.1.min.js"></script>
   <script>
+    // TODO: move to separate js file
+    var currentIndex = 0;
+    var businesses = [];
+
+    // if Geolocation is supported, return latitude and longitude of user's location
+    function getLocation() {
+      if(navigator.geolocation) {
+	navigator.geolocation.getCurrentPosition(showCoffeePlaces);
+      } else {
+	$('#error-message').text("Geolocation is not supported"); // TODO: change this to enabling user to put in their location by hand (maybe zipcode?)	
+      }
+    }
+
+    function showCoffeePlaces(position) {
+      var latitude = position.coords.latitude;
+      var longitude = position.coords.longitude;
+      $.ajax({
+	url: "/search",
+	type: "GET",
+	data: { "latitude": latitude, "longitude": longitude },
+	success: function(result) {
+	  // TODO: handle success=False w/ error_message
+
+	  // jsonify returns string
+	  businesses = JSON.parse(result).businesses; // JSON.parse returns Object
+
+	  // coffee places to html; to make faster, load first img first
+	  addCoffeePlace(currentIndex);
+	  $('.coffee-place').hide().fadeIn();
+	}
+      });
+    }
+
+    function addCoffeePlace(index) {
+      // create html elements
+      var divCoffeePlace = $("<div class='coffee-place'></div>");
+
+      var divImg = $("<div class='img'></div>");
+      var divInfo = $("<div class='info'></div>");
+      var h2Name = $("<h2 class='name'></h2>").text(businesses[index].name);
+      var pRating = $("<p class='rating'></p>").text(businesses[index].rating);
+      var divLocation = $("<div class='location'></div>");
+      // inside location div
+      for(var i = 0; i < businesses[index].location.display_address.length; i++) {
+	var address = $("<p></p>").text(businesses[index].location.display_address[i]);
+	divLocation.append(address);
+      }
+      var phone = $("<p class='phone'></p>").text(businesses[index].display_phone);
+      var linkToYelp = $("<a>More Info</a>").prop("href", businesses[index].url);
+      divInfo.append(h2Name, pRating, divLocation, phone, linkToYelp);
+      divImg.append(divInfo);
+
+      divImg.css("background-image", "url(" + businesses[index].image_url + ")");
+
+      // TODO: move the following to css file
+      divImg.css("background-size", "cover");
+      divImg.css("background-repeat", "no-repeat");
+
+      var divMap = $("<div class='map'></div>");
+
+      // put elements in coffee-place div
+      divCoffeePlace.append(divImg, divMap);
+
+      // put coffee-place div after cover-page div
+      $('#cover-page').after(divCoffeePlace);
+    }
+
     $(document).ready(function() {
 
-      // if Geolocation is supported, return latitude and longitude of user's location
-      function getLocation() {
-	if(navigator.geolocation) {
-	  navigator.geolocation.getCurrentPosition(showCoffeePlaces);
-	} else {
-	  $('#error-message').text("Geolocation is not supported"); // TODO: change this to enabling user to put in their location by hand (maybe zipcode?)	
-	}
-      }
-
-      function showCoffeePlaces(position) {
-	var latitude = position.coords.latitude;
-	var longitude = position.coords.longitude;
-	$.ajax({
-	  url: "/search",
-	  type: "GET",
-	  data: { "latitude": latitude, "longitude": longitude },
-	  success: function(result) {
-	    // jsonify returns string
-	    r = JSON.parse(result); // JSON.parse returns Object
-
-	    // if it's a coffee place, add to html
-	    for(var i = 0; i < r.businesses.length; i++) {
-	      for(var j = 0; j < r.businesses[i].categories.length; j++) {
-		if(r.businesses[i].categories[j].alias === "coffee") {
-		  addCoffeePlace(i);  
-		}
-	      }
-	    }
-
-	  }
-	});
-      }
-
-      function addCoffeePlace(index) {
-	var divCoffeePlace = $("<div class='coffee-place'></div>");
-	var h2Name = $("<h2 class='name'></h2>").text(r.businesses[index].name);
-	var pRating = $("<p class='rating'></p>").text(r.businesses[index].rating);
-	var img = $("<img>").prop("src", r.businesses[index].image_url);
-	var divLocation = $("<div class='location'></div>");
-	for(var i = 0; i < r.businesses[index].location.display_address.length; i++) {
-	  var address = $("<p></p>").text(r.businesses[index].location.display_address[i]);
-	  divLocation.append(address);
-	}
-	var phone = $("<p class='phone'></p>").text(r.businesses[index].display_phone);
-	var linkToYelp = $("<a>More Info</a>").prop("href", r.businesses[index].url);
-
-	divCoffeePlace.append(h2Name, pRating, img, divLocation, phone, linkToYelp);
-	$('body').append(divCoffeePlace);
-      }
-
+      // get user's location and show nearby coffee spots
       getLocation();
 
+      // TODO: update id for 'next suggestion'
+      $('#scroll-down').on('click', function() {
+        // TODO: handle case when 'next suggestion' is clicked before any coffee places are loaded
+	// if businesses.length, THEN add a coffee place
+	
+	currentIndex++;
+	// TODO: if currentIndex == businesses.length - 1, remove 'next suggestion'
+
+	// TODO: handle currentIndex >= businesses.length
+	addCoffeePlace(currentIndex);
+	$('.coffee-place').hide().fadeIn();
+      });
+      
     });
   </script>
 </body>
