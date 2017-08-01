@@ -2,19 +2,24 @@
 <html>
 <head>
   <title>A Cup of Coffee Today</title>
+  <script src="static/lib/jquery-3.2.1.min.js"></script>
+  <link type="text/css" rel="stylesheet" href="static/lib/Pacifico.css">
+  <link type="text/css" rel="stylesheet" href="static/lib/Alegreya.css">
   <link type="text/css" rel="stylesheet" href="static/style.css">
 </head>
 <body>
 
   <div id="cover-page">
+    <img src="/static/coffee_cup_white.png">
     <h1>A Cup of Coffee Today</h1>
     <div id="cover-message">Find out nearby coffee spots!</div>
     <div id="error-message"></div>
   </div>
 
-  <div id="scroll-down">Next Suggestion</div>
+  <div id="next-suggestion">
+    <img src="static/next.png">
+  </div>
 
-  <script src="static/lib/jquery-3.2.1.min.js"></script>
   <script>
     // TODO: move to separate js file
     var currentIndex = 0;
@@ -23,15 +28,24 @@
     // if Geolocation is supported, return latitude and longitude of user's location
     function getLocation() {
       if(navigator.geolocation) {
-	navigator.geolocation.getCurrentPosition(showCoffeePlaces);
+	navigator.geolocation.getCurrentPosition(showCoffeePlaces, noLocation, {timeout: 30000, enableHighAccuracy: true, maximumAge: 75000});
       } else {
-	$('#error-message').text("Geolocation is not supported"); // TODO: change this to enabling user to put in their location by hand (maybe zipcode?)	
+	noLocation();	
       }
     }
 
+    function noLocation() {
+      $('#error-message').text("Geolocation is not supported"); // TODO: change this to enabling user to put in their location by hand (maybe zipcode?)	
+
+    }
+
     function showCoffeePlaces(position) {
+      /* commented out since Yelp doesn't support Korea (doesn't have search results for Korean location)
       var latitude = position.coords.latitude;
       var longitude = position.coords.longitude;
+      */
+      var latitude = 37.7568401;
+      var longitude = -122.4457371;
       $.ajax({
 	url: "/search",
 	type: "GET",
@@ -44,6 +58,7 @@
 
 	  // coffee places to html; to make faster, load first img first
 	  addCoffeePlace(currentIndex);
+	  initMap();
 	  $('.coffee-place').hide().fadeIn();
 	}
       });
@@ -56,23 +71,21 @@
       var divImg = $("<div class='img'></div>");
       var divInfo = $("<div class='info'></div>");
       var h2Name = $("<h2 class='name'></h2>").text(businesses[index].name);
-      var pRating = $("<p class='rating'></p>").text(businesses[index].rating);
+      var divRating = $("<div class='rating'></div>");
+      var locationIcon = $("<img>").prop({ "src": "/static/map.png", "class": "location-icon" });
       var divLocation = $("<div class='location'></div>");
       // inside location div
       for(var i = 0; i < businesses[index].location.display_address.length; i++) {
 	var address = $("<p></p>").text(businesses[index].location.display_address[i]);
 	divLocation.append(address);
       }
+      var phoneIcon = $("<img>").prop({ "src": "/static/phone.png", "class": "phone-icon" });
       var phone = $("<p class='phone'></p>").text(businesses[index].display_phone);
       var linkToYelp = $("<a>More Info</a>").prop("href", businesses[index].url);
-      divInfo.append(h2Name, pRating, divLocation, phone, linkToYelp);
+      divInfo.append(h2Name, divRating, locationIcon, divLocation, phoneIcon, phone, linkToYelp);
       divImg.append(divInfo);
 
       divImg.css("background-image", "url(" + businesses[index].image_url + ")");
-
-      // TODO: move the following to css file
-      divImg.css("background-size", "cover");
-      divImg.css("background-repeat", "no-repeat");
 
       var divMap = $("<div class='map'></div>");
 
@@ -81,6 +94,40 @@
 
       // put coffee-place div after cover-page div
       $('#cover-page').after(divCoffeePlace);
+
+      // add coffee bean images
+      addRating(businesses[index].rating);
+    }
+
+    // add coffee bean image as many as the rating
+    function addRating(rating) {
+      // add big coffee beans(1)
+      var ratingFloor = Math.floor(rating);
+      for(var i = 0; i < ratingFloor; i++) {
+      // should declare var in for loop. Unless, same element will just move around the .rating, not newly created
+	var coffeeBeanImg = $("<img>").prop({ "src": "/static/one_coffee_bean.png", "class": "big-coffee-bean" });
+	$('.rating').first().append(coffeeBeanImg);
+      }
+      // QUESTION: diff btw .get(0)/[0] and .first()?
+
+      // add small coffee beans(0.5)
+      if(rating - ratingFloor) {
+	var coffeeBeanImg = $("<img>").prop({ "src": "/static/one_coffee_bean.png", "class": "small-coffee-bean" });
+	$('.rating').first().append(coffeeBeanImg);
+      }
+    }
+
+    function initMap() {
+      var coffeePlaceLocation = { lat: businesses[currentIndex].coordinates.latitude, lng: businesses[currentIndex].coordinates.longitude };
+      // since new coffee-place div is added at the top(index 0)
+      var map = new google.maps.Map($('.map')[0], {
+	zoom: 18,
+	center: coffeePlaceLocation
+      });
+      var marker = new google.maps.Marker({
+	position: coffeePlaceLocation,
+	map: map
+      });
     }
 
     $(document).ready(function() {
@@ -89,7 +136,7 @@
       getLocation();
 
       // TODO: update id for 'next suggestion'
-      $('#scroll-down').on('click', function() {
+      $('#next-suggestion').on('click', function() {
         // TODO: handle case when 'next suggestion' is clicked before any coffee places are loaded
 	// if businesses.length, THEN add a coffee place
 	
@@ -98,10 +145,14 @@
 
 	// TODO: handle currentIndex >= businesses.length
 	addCoffeePlace(currentIndex);
+	initMap();
 	$('.coffee-place').hide().fadeIn();
       });
       
     });
+  </script>
+  <script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDolhQPilXAsHBIfoX24_sKRz0Q6MaUbU8">
   </script>
 </body>
 </html>
