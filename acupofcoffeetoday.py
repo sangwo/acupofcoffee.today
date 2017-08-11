@@ -53,15 +53,19 @@ def get_coffee_places(): # get coffee places near user's location using Yelp API
   # get Yelp search results
   latitude = request.args.get('latitude')
   longitude = request.args.get('longitude')
+  # when geolocation doesn't work
+  location = request.args.get('location')
+
   sort_by = "rating" # TODO: enable different options in html, and receive chosen option
   params = {
     "latitude": latitude,
     "longitude": longitude,
+    "location": location,
     "categories": "coffee",
     "sort_by": sort_by,
     "open_now": True,
   }
-  headers = { "Authorization": "Bearer {}".format(access_token) }
+  headers = { "Authorization": "Bearer {}".format(access_token), "Content-type": "application/json" }
 
   # TODO: handle non-200 responses and errors
   response = requests.get(YELP_SEARCH_URL, params=params, headers=headers)
