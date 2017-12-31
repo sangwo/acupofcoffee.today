@@ -2,3 +2,4 @@ access_token.txt
 *.pyc
 *.swp
 .DS_Store
+venv

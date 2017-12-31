@@ -29,6 +29,7 @@
     function getLocation() {
       if(navigator.geolocation) {
 	navigator.geolocation.getCurrentPosition(showCoffeePlaces, noLocation, {timeout: 30000, enableHighAccuracy: true, maximumAge: 75000});
+	// navigator.geolocation.getCurrentPosition(noLocation, noLocation, {timeout: 30000, enableHighAccuracy: true, maximumAge: 75000});
       } else {
 	noLocation();	
       }
@@ -36,16 +37,22 @@
 
     function noLocation() {
       $('#error-message').text("Geolocation is not supported"); // TODO: change this to enabling user to put in their location by hand (maybe zipcode?)	
-
+      var locationFormDiv = $("<div id='location-form'></div>");
+      var locationForm = $("<form action='/search' method='get'></form>");
+      var locationInput = $("<input type='text' name='location'></input>");
+      var locationSubmit = $("<button id='submit-location'>Find</button>");
+      locationForm.append(locationInput, locationSubmit);
+      locationFormDiv.append(locationForm);
+      $('#cover-page').after(locationFormDiv);
     }
 
     function showCoffeePlaces(position) {
-      /* commented out since Yelp doesn't support Korea (doesn't have search results for Korean location)
       var latitude = position.coords.latitude;
       var longitude = position.coords.longitude;
-      */
+      /* temporary location for test in Korea since Yelp is not supported in Korea (doesn't have search results for Korean location)
       var latitude = 37.7568401;
       var longitude = -122.4457371;
+      */
       $.ajax({
 	url: "/search",
 	type: "GET",
@@ -135,7 +142,29 @@
       // get user's location and show nearby coffee spots
       getLocation();
 
-      // TODO: update id for 'next suggestion'
+      // when geolocation doesn't work, send zipcode/city typed by user to server
+      $('#submit-location').on('click', function() {
+	var inputLocation = $("input[name='location']").val();
+
+	$.ajax({
+	  url: "/search",
+	  type: "GET",
+	  data: { "location": inputLocation },
+	  success: function(result) {
+	    // TODO: handle success=False w/ error_message
+	    
+	    // jsonify returns string
+	    businesses = JSON.parse(result).businesses; // JSON.parse returns Object
+
+	    // coffee places to html; to make faster, load first img first
+	    addCoffeePlace(currentIndex);
+	    initMap();
+	    $('.coffee-place').hide().fadeIn();
+	  }
+	});
+      });
+
+      // when next-suggestion clicked, load next coffee place
       $('#next-suggestion').on('click', function() {
         // TODO: handle case when 'next suggestion' is clicked before any coffee places are loaded
 	// if businesses.length, THEN add a coffee place
@@ -148,7 +177,7 @@
 	initMap();
 	$('.coffee-place').hide().fadeIn();
       });
-      
+
     });
   </script>
   <script async defer

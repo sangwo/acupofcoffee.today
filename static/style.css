@@ -72,14 +72,16 @@ body {
 }
 
 .coffee-place {
-  margin: 120px 200px 0 200px;
+  width: 70%;
+  margin: auto;
+  margin-top: 120px;
   padding-bottom: 100px;
   height: calc(100vh - 220px);
 }
 
 .img {
   height: 100%;  
-  width: 400px;
+  width: 50%;
   position: relative;
   box-sizing: border-box;
   padding: 20px;
@@ -93,7 +95,7 @@ body {
   position: absolute;
   box-sizing: border-box;
   padding: 10px;
-  width: 360px;
+  width: calc(100% - 40px);
   background-color: rgba(0, 0, 0, 0.5);
 }
 
@@ -119,7 +121,7 @@ body {
 .map {
   display: inline-block;  
   height: 100%;
-  width: calc(100% - 400px);
+  width: 50%;
   /*padding: 20px;*/
   box-sizing: border-box;
 }
@@ -153,4 +155,9 @@ body {
   width: 20px;
   height: auto;
   display: inline-block;
+}
+
+#location-form {
+  text-align: center;
+  line-height: 100vh;
 }
