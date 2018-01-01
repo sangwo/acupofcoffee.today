@@ -159,5 +159,53 @@ body {
 
 #location-form {
   text-align: center;
-  line-height: 100vh;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 80px 20px;
+  width: 400px;
+  margin-left: calc(50% - 200px);
+}
+
+#location-form-img {
+  width: 100px;
+  height: auto;
+  position: absolute;
+  left: calc(50% - 50px);
+  top: 50px;
+}
+
+#location-form-msg {
+  color: white;
+}
+
+#msg1 {
+  font-size: 28px;
+  margin: 0;
+}
+
+#msg2 {
+  font-size: 17px;
+  margin: 8px;
+}
+
+#input-location {
+  border: none;
+  border-radius: 2px 0 0 2px;
+  font-size: 15px;
+  padding: 5px;
+  font-family: 'Alegreya', serif;
+}
+
+#submit-location {
+  border: none;
+  border-radius: 0 2px 2px 0;
+  font-size: 15px;
+  padding: 5px 10px;
+  font-family: 'Alegreya', serif;
+  background-color: black;
+  color: white;
 }

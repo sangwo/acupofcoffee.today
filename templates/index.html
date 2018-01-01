@@ -27,22 +27,27 @@
 
     // if Geolocation is supported, return latitude and longitude of user's location
     function getLocation() {
+      // TODO: show error message if the country user's in isn't supported by Yelp
       if(navigator.geolocation) {
 	navigator.geolocation.getCurrentPosition(showCoffeePlaces, noLocation, {timeout: 30000, enableHighAccuracy: true, maximumAge: 75000});
-	// navigator.geolocation.getCurrentPosition(noLocation, noLocation, {timeout: 30000, enableHighAccuracy: true, maximumAge: 75000});
       } else {
 	noLocation();	
       }
     }
 
     function noLocation() {
-      $('#error-message').text("Geolocation is not supported"); // TODO: change this to enabling user to put in their location by hand (maybe zipcode?)	
       var locationFormDiv = $("<div id='location-form'></div>");
-      var locationForm = $("<form action='/search' method='get'></form>");
-      var locationInput = $("<input type='text' name='location'></input>");
-      var locationSubmit = $("<button id='submit-location'>Find</button>");
+      var locationFormImg = $("<img>").prop({ "src": "/static/decorative_line.png", "id": "location-form-img"});
+      var locationFormMsg = $("<div id='location-form-msg'></div>");
+      var Msg1 = $("<p id='msg1'>Geolocation is not supported :(</p>");
+      var Msg2 = $("<p id='msg2'>Please enter <b>City Name</b> or <b>Zipcode</b></p>");
+      locationFormMsg.append(Msg1, Msg2);
+      var locationForm = $("<form></form>");
+      var locationInput = $("<input type='text' name='location' id='input-location'></input>");
+      // 'return false' used to prevent default form submit that overlaps with ajax call
+      var locationSubmit = $("<button id='submit-location' onclick='manualSearch(); return false;'>Find</button>");
       locationForm.append(locationInput, locationSubmit);
-      locationFormDiv.append(locationForm);
+      locationFormDiv.append(locationFormImg, locationFormMsg, locationForm);
       $('#cover-page').after(locationFormDiv);
     }
 
@@ -137,33 +142,34 @@
       });
     }
 
+    // when geolocation doesn't work, send zipcode/city typed by user to server
+    // this whole thing doesn't work when in document.ready because submit-location button is added later
+    function manualSearch() {
+      var inputLocation = $("input[name='location']").val();
+
+      $.ajax({
+	url: "/search",
+	type: "GET",
+	data: { "location": inputLocation },
+	success: function(result) {
+	  // TODO: handle success=False w/ error_message
+	  
+	  // jsonify returns string
+	  businesses = JSON.parse(result).businesses; // JSON.parse returns Object
+
+	  // coffee places to html; to make faster, load first img first
+	  addCoffeePlace(currentIndex);
+	  initMap();
+	  $('.coffee-place').hide().fadeIn();
+	}
+      });
+    }
+
     $(document).ready(function() {
 
       // get user's location and show nearby coffee spots
       getLocation();
-
-      // when geolocation doesn't work, send zipcode/city typed by user to server
-      $('#submit-location').on('click', function() {
-	var inputLocation = $("input[name='location']").val();
-
-	$.ajax({
-	  url: "/search",
-	  type: "GET",
-	  data: { "location": inputLocation },
-	  success: function(result) {
-	    // TODO: handle success=False w/ error_message
-	    
-	    // jsonify returns string
-	    businesses = JSON.parse(result).businesses; // JSON.parse returns Object
-
-	    // coffee places to html; to make faster, load first img first
-	    addCoffeePlace(currentIndex);
-	    initMap();
-	    $('.coffee-place').hide().fadeIn();
-	  }
-	});
-      });
-
+      
       // when next-suggestion clicked, load next coffee place
       $('#next-suggestion').on('click', function() {
         // TODO: handle case when 'next suggestion' is clicked before any coffee places are loaded
