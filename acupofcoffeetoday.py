@@ -3,6 +3,10 @@ app = Flask(__name__)
 import requests, time
 from flask import render_template, request, jsonify, json
 
+import os
+THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+access_token_file = os.path.join(THIS_FOLDER, 'access_token.txt')
+
 YELP_SEARCH_URL = "https://api.yelp.com/v3/businesses/search"
 YELP_ACCESS_TOKEN_URL = "https://api.yelp.com/oauth2/token"
 
@@ -14,7 +18,7 @@ def get_user_location():
 def get_coffee_places(): # get coffee places near user's location using Yelp API
   # TODO: factor out access token grabbing - "token = get_access_token()"
   # get access token; if it's expired, re-request Yelp
-  file = open("access_token.txt", "r+")
+  file = open(access_token_file, "r+")
   file_json = file.read()
   expire_date = json.loads(file_json)['expire_date']
 
@@ -44,6 +48,7 @@ def get_coffee_places(): # get coffee places near user's location using Yelp API
       "expire_date": expire_date,
     })
     file.write(new_file_json)
+    file.truncate() # in order to overwrite
     file.close()
 
   else: # else bring saved access token from the file
