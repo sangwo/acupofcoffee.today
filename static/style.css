@@ -46,11 +46,6 @@ body {
   margin-top: -15px;
 }
 
-#error-message {
-  color: red;
-  margin-top: -7px;
-}
-
 #next-suggestion {
   position: fixed;
   bottom: 0;
@@ -76,7 +71,7 @@ body {
   margin: auto;
   margin-top: 120px;
   padding-bottom: 100px;
-  height: calc(100vh - 220px);
+  height: calc(100vh - 242px); /* 242 = margin-top + padding-bottom + height of footer*/
 }
 
 .img {
@@ -208,4 +203,13 @@ body {
   font-family: 'Alegreya', serif;
   background-color: black;
   color: white;
+}
+
+footer {
+  color: white;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100px;
+  text-align: center;
 }
